@@ -1,4 +1,69 @@
-import React, { Component } from 'react';
+
+  import React, { Component } from 'react';
+  import { 
+      AppRegistry,
+      ListView,
+      NativeAppEventEmitter, 
+      View, 
+      Text, 
+      Button } from 'react-native';
+  import BleManager from 'react-native-ble-manager';
+  AppRegistry.registerComponent('mungiproject2', () => App);
+export default class App extends Component {
+      constructor(props){
+          super(props);
+  
+          const dataSource = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+          this.devices = [];
+          this.state = {
+              dataSource: dataSource.cloneWithRows(this.devices)
+          };
+      }
+  
+      componentDidMount() {
+          console.log('bluetooth scanner mounted');
+  
+          NativeAppEventEmitter.addListener('BleManagerDiscoverPeripheral',(data) => 
+          {
+              let device = 'device found: ' + data.name + '(' + data.id + ')'; 
+  
+              if(this.devices.indexOf(device) == -1) {
+                  this.devices.push(device);
+              }
+  
+              let newState = this.state;
+              newState.dataSource = newState.dataSource.cloneWithRows(this.devices);
+              this.setState(newState);
+          });
+  
+          BleManager.start({showAlert: false})
+                    .then(() => {
+                              // Success code 
+                              console.log('Module initialized');
+                              });
+      }
+  
+      startScanning() {
+         console.log('start scanning');
+         BleManager.scan([], 120);
+      }
+  
+      render() {
+          return (
+              <View style={{padding: 50 }}>
+                  <Text>Bluetooth scanner</Text>
+                  <Button onPress={() => this.startScanning()} title="Start scanning"/>
+  
+                  <ListView
+                      dataSource={this.state.dataSource}
+                      renderRow={(rowData) => <Text>{rowData}</Text>}
+                  />
+              </View>
+          );
+      }
+  }
+
+/*import React, { Component } from 'react';
 import {
   AppRegistry,
   StyleSheet,
@@ -168,7 +233,7 @@ export default class App extends Component {
               BleManager.readRSSI(peripheral.id).then((rssi) => {
                 console.log('Retrieved actual RSSI value', rssi);
               });
-            });*/
+            });
 
             // Test using bleno's pizza example
             // https://github.com/sandeepmistry/bleno/tree/master/examples/pizza
@@ -193,7 +258,7 @@ export default class App extends Component {
                           CRISPY:     2,
                           BURNT:      3,
                           ON_FIRE:    4
-                        };*/
+                        };
                       });
                     });
 
